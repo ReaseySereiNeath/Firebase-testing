@@ -2,10 +2,14 @@ import { initializeApp } from "firebase/app";
 import {
   getFirestore,
   collection,
-  getDocs,
+  onSnapshot,
   addDoc,
   deleteDoc,
   doc,
+  query,
+  where,
+  orderBy,
+  serverTimestamp,
 } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -26,19 +30,35 @@ const db = getFirestore();
 // collection ref
 const colRef = collection(db, "books");
 
+//queries (where) it mean to filter data (like where author == colleen hoover)
+// const q = query(colRef, where("author", "==", "colleen hoover"), orderBy("createdAt"));
+
+//queries (orderBy) it mean to sort data (like order by createdAt) (asc or desc) (default is asc) and which all data
+const q = query(colRef, orderBy("createdAt"));
+
 //get collection data
-getDocs(colRef)
-  .then((snapshot) => {
-    let books = [];
-    snapshot.docs.forEach((doc) => {
-      books.push({ ...doc.data(), id: doc.id });
-    });
-    console.log(books);
-    // console.log(snapshot);
-  })
-  .catch((err) => {
-    console.log(err.message);
+// getDocs(colRef)
+//   .then((snapshot) => {
+//     let books = [];
+//     snapshot.docs.forEach((doc) => {
+//       books.push({ ...doc.data(), id: doc.id });
+//     });
+//     console.log(books);
+//     // console.log(snapshot);
+//   })
+//   .catch((err) => {
+//     console.log(err.message);
+//   });
+
+//get real time collection data
+onSnapshot(colRef, (snapshot) => {
+  let books = [];
+  snapshot.docs.forEach((doc) => {
+    books.push({ ...doc.data(), id: doc.id });
   });
+  console.log(books);
+});
+
 
 //adding documents
 const addBookForm = document.querySelector(".add");
@@ -48,6 +68,7 @@ addBookForm.addEventListener("submit", (e) => {
   addDoc(colRef, {
     title: addBookForm.title.value,
     author: addBookForm.author.value,
+    createdAt: serverTimestamp(),
   }).then(() => {
     addBookForm.reset();
   });
